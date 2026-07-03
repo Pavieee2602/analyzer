@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trade Analyzer">
+<meta name="theme-color" content="#0d0d0f">
+<title>Trade Signal Analyzer — Claude AI</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0f;--bg2:#141418;--bg3:#1c1c22;--bg4:#242430;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0f0f5;--text2:#9898a8;--text3:#5a5a6a;
+  --accent:#4f7fff;--accent-bg:rgba(79,127,255,0.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.12);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.12);
+  --yellow:#f59e0b;--yellow-bg:rgba(245,158,11,0.12);
+  --radius:10px;--radius-lg:16px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4f7fff,#a855f7);display:flex;align-items:center;justify-content:center;font-size:15px}
+.logo-text{font-size:15px;font-weight:600}
+.logo-sub{font-size:10px;color:var(--text3)}
+.api-area{display:flex;align-items:center;gap:6px}
+.api-input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;width:200px;outline:none;font-family:monospace}
+.api-input::placeholder{color:var(--text3)}
+.api-badge{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2);display:none}
+.api-badge.show{display:inline-block}
+.main{max-width:760px;margin:0 auto;padding:24px 16px 80px}
+.setup-banner{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:24px}
+.setup-banner h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.setup-banner p{font-size:13px;color:var(--text2)}
+.setup-banner a{color:var(--accent);text-decoration:none}
+.tabs{display:flex;gap:5px;margin-bottom:24px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:4px}
+.tab{flex:1;padding:8px 12px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.tab:hover{color:var(--text);background:var(--bg3)}
+.tab.active{background:var(--bg4);color:var(--text);font-weight:500}
+.section{display:none}.section.visible{display:block}
+.form-block{margin-bottom:16px}
+.form-label{font-size:11px;color:var(--text3);margin-bottom:7px;display:block;text-transform:uppercase;letter-spacing:.05em}
+.chip-row{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:5px 13px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s;user-select:none}
+.chip.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:500}
+.signal-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:20px}
+.signal-hint{font-size:12px;color:var(--text3);margin-bottom:7px}
+.signal-box textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 11px;color:var(--text);font-size:12px;font-family:'Courier New',monospace;resize:vertical;min-height:72px;outline:none}
+.signal-box textarea::placeholder{color:var(--text3)}
+.upload-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px}
+.upload-section-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.upload-section-sub{font-size:12px;color:var(--text3);margin-bottom:14px}
+.quick-hint{font-size:12px;color:var(--accent);padding:8px 12px;background:var(--accent-bg);border-radius:var(--radius);border:1px solid rgba(79,127,255,.2);margin-bottom:12px;line-height:1.6}
+.big-upload-btn{width:100%;padding:13px;border-radius:var(--radius-lg);border:2px dashed var(--border2);background:var(--bg3);color:var(--text2);font-size:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-bottom:12px}
+.big-upload-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.progress-bar{height:4px;background:var(--bg3);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.slots-group{margin-bottom:12px}
+.slot-group-label{font-size:11px;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.slot-group-label span{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-trade{background:var(--accent-bg);color:var(--accent);border:1px solid rgba(79,127,255,.25)}
+.badge-parent{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(245,158,11,.25)}
+.badge-inv{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.slots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px;text-align:center;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all .2s}
+.slot:hover{border-color:var(--accent)}
+.slot.filled{border-color:var(--green);background:rgba(34,197,94,.06)}
+.slot.parent-slot{border-color:rgba(245,158,11,.25)}
+.slot input{display:none}
+.slot-icon{font-size:20px}
+.slot.filled .icon-empty{display:none}
+.slot:not(.filled) .icon-done{display:none}
+.slot-label{font-size:11px;color:var(--text2);font-weight:500}
+.slot-thumb{width:100%;border-radius:5px;max-height:44px;object-fit:cover;display:none}
+.slot.filled .slot-thumb{display:block}
+.reset-btn{width:100%;padding:9px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:all .15s}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+.analyze-btn{width:100%;padding:13px;border-radius:var(--radius-lg);border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s}
+.analyze-btn:hover{opacity:.9}
+.analyze-btn:disabled{opacity:.4;cursor:not-allowed}
+.dots{display:flex;gap:4px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+.result-card{border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;margin-bottom:14px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-header{padding:16px 18px;display:flex;align-items:center;gap:12px}
+.result-header.buy{background:var(--green-bg);border-bottom:1px solid rgba(34,197,94,.2)}
+.result-header.sell{background:var(--red-bg);border-bottom:1px solid rgba(239,68,68,.2)}
+.result-header.skip{background:rgba(168,85,247,.12);border-bottom:1px solid rgba(168,85,247,.25)}
+.result-header.wait{background:var(--yellow-bg);border-bottom:1px solid rgba(245,158,11,.2)}
+.verdict-icon{font-size:34px}
+.verdict{font-size:26px;font-weight:700}
+.verdict.buy{color:var(--green)}.verdict.sell{color:var(--red)}.verdict.skip{color:#a855f7}.verdict.wait{color:var(--yellow)}
+.conf-pill{font-size:11px;padding:2px 9px;border-radius:20px;margin-top:2px;display:inline-block}
+.conf-HIGH{background:var(--green-bg);color:var(--green)}
+.conf-MEDIUM{background:var(--yellow-bg);color:var(--yellow)}
+.conf-LOW{background:var(--red-bg);color:var(--red)}
+.result-body{background:var(--bg2);padding:16px 18px}
+.trends-label{font-size:10px;color:var(--text3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em}
+.trend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.trend-grid.cols2{grid-template-columns:repeat(2,1fr)}
+.trend-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px;text-align:center}
+.cell-tf{font-size:10px;color:var(--text3);margin-bottom:3px}
+.cell-val{font-size:12px;font-weight:600}
+.cell-val.bull{color:var(--green)}.cell-val.bear{color:var(--red)}.cell-val.neutral{color:var(--text3)}
+.reason-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;margin-top:4px}
+.reason-text{font-size:13px;color:var(--text2);line-height:1.6}
+.asset-info-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.asset-info-name{font-size:22px;font-weight:800;letter-spacing:.02em;color:var(--text)}
+.asset-info-broker{font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--accent-bg);color:var(--accent);border:1px solid rgba(79,127,255,.25);letter-spacing:.04em}
+.asset-info-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.alert{padding:11px 13px;border-radius:var(--radius);font-size:13px;margin-bottom:14px;display:flex;align-items:flex-start;gap:7px}
+.alert-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(245,158,11,.25)}
+.alert-err{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+footer{text-align:center;padding:20px;font-size:11px;color:var(--text3);border-top:1px solid var(--border)}
+
+/* ===================================================================
+   RESPONSIVE: PHONE / NARROW VIEWPORTS
+   Everything above this point is shared by laptop + mobile. The rules
+   below only kick in under 600px so desktop/laptop layout is untouched.
+   =================================================================== */
+@media (max-width: 600px){
+  .header{
+    height:auto;
+    flex-wrap:wrap;
+    padding:10px 14px;
+    gap:8px;
+    row-gap:8px;
+  }
+  .logo-sub{display:none} /* "Powered by Claude AI" -- saves a row on tiny screens */
+  .api-area{width:100%;order:3}
+  .api-input{flex:1 1 auto;width:auto;min-width:0;font-size:13px}
+  .api-badge{flex-shrink:0}
+
+  .main{padding:16px 12px 90px} /* extra bottom padding clears mobile browser chrome */
+
+  .tabs{flex-wrap:wrap}
+  .tab{flex:1 1 30%;font-size:12px;padding:9px 6px}
+
+  .chip{padding:7px 14px;font-size:13px} /* bigger touch target */
+
+  .asset-info-box{flex-wrap:wrap;gap:10px}
+  .asset-info-box > div:last-child{text-align:left}
+
+  .verdict-icon{font-size:28px}
+  .verdict{font-size:21px}
+
+  .trend-grid{gap:6px}
+  .cell-val{font-size:11px}
+
+  .slots-grid{gap:6px}
+  .slot{min-height:74px;padding:6px}
+
+  .big-upload-btn{font-size:13px;padding:14px 10px} /* larger tap target */
+  .analyze-btn{padding:15px} /* larger tap target */
+}
+
+/* Landscape phones / small tablets get a touch more breathing room */
+@media (min-width: 601px) and (max-width: 900px){
+  .main{max-width:680px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    <div><div class="logo-text">Trade Analyzer</div><div class="logo-sub">Powered by Claude AI</div></div>
+  </div>
+  <div class="api-area">
+    <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-... API key" oninput="checkKey()">
+    <span class="api-badge" id="keyBadge">✓ Ready</span>
+  </div>
+</header>
+
+<main class="main">
+  <div class="setup-banner" id="setupBanner">
+    <h3>🔑 Paste your Claude API key to start</h3>
+    <p>Get free key: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create → Copy → Paste above ✅</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('crypto',this)">🪙 Crypto</button>
+    <button class="tab" onclick="switchTab('gold',this)">🥇 Gold/Silver</button>
+    <button class="tab" onclick="switchTab('forex',this)">💱 Forex</button>
+  </div>
+
+  <!-- CRYPTO -->
+  <div class="section visible" id="sec-crypto">
+    <div class="form-block">
+      <label class="form-label">Asset</label>
+      <div class="chip-row" id="c-asset">
+        <span class="chip active" onclick="setChip('c-asset',this);updateCrypto()">BNB</span>
+        <span class="chip" onclick="setChip('c-asset',this);updateCrypto()">ETH</span>
+        <span class="chip" onclick="setChip('c-asset',this);updateCrypto()">SOL</span>
+        <span class="chip" onclick="setChip('c-asset',this);updateCrypto()">BTC</span>
+        <span class="chip" onclick="setChip('c-asset',this);updateCrypto()">Other</span>
+      </div>
+    </div>
+    <div class="form-block">
+      <label class="form-label">Direction</label>
+      <div class="chip-row" id="c-dir">
+        <span class="chip active" onclick="setChip('c-dir',this)">BUY</span>
+        <span class="chip" onclick="setChip('c-dir',this)">SELL</span>
+      </div>
+    </div>
+    <div class="signal-box">
+      <div class="signal-hint">📋 Paste Telegram signal (optional)</div>
+      <textarea id="c-signal" placeholder="BUY — BNBUSD&#10;Price : $565.40&#10;ALMA  : bullish&#10;..."></textarea>
+    </div>
+    <div class="asset-info-box" id="c-asset-info">
+      <div>
+        <div class="asset-info-label">Symbol</div>
+        <div class="asset-info-name" id="c-info-symbol">BNBUSD</div>
+      </div>
+      <div style="text-align:right">
+        <div class="asset-info-label">Broker / Exchange</div>
+        <div class="asset-info-broker" id="c-info-broker">CRYPTO</div>
+      </div>
+    </div>
+    <div class="upload-section">
+      <div class="upload-section-title">📸 Upload Charts</div>
+      <div class="upload-section-sub" id="c-sub">6 charts — BNB (15m, 1H, 4H) + BTC (15m, 1H, 4H)</div>
+      <div class="quick-hint">
+        💡 <strong>PC:</strong> Click button below → hold <strong>Ctrl</strong> → select all 6 photos at once → Open!<br>
+        📱 <strong>Mobile:</strong> Tap each slot individually → select from gallery
+      </div>
+      <label class="big-upload-btn" style="cursor:pointer">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="bulkUpload('crypto',this)">
+        📂 Select All Charts At Once (PC: hold Ctrl for multiple)
+      </label>
+      <div class="progress-bar"><div class="progress-fill" id="c-prog" style="width:0%"></div></div>
+
+      <div class="slots-group">
+        <div class="slot-group-label"><span class="badge-trade">Trade asset</span> <span id="c-alt-lbl">BNB charts</span></div>
+        <div class="slots-grid">
+          <div class="slot" id="cs-a15" onclick="trigSlot('crypto','a15')">
+            <input type="file" accept="image/*" style="display:none" onchange="slotPick('crypto','a15',this)">
+            <div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div>
+            <img class="slot-thumb" id="ct-a15"><div class="slot-label" id="cl-a15">BNB 15m</div>
+          </div>
+          <div class="slot" id="cs-a1h" onclick="trigSlot('crypto','a1h')">
+            <input type="file" accept="image/*" style="display:none" onchange="slotPick('crypto','a1h',this)">
+            <div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div>
+            <img class="slot-thumb" id="ct-a1h"><div class="slot-label" id="cl-a1h">BNB 1H</div>
+          </div>
+          <div class="slot" id="cs-a4h" onclick="trigSlot('crypto','a4h')">
+            <input type="file" accept="image/*" style="display:none" onchange="slotPick('crypto','a4h',this)">
+            <div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div>
+            <img class="slot-thumb" id="ct-a4h"><div class="slot-label" id="cl-a4h">BNB 4H</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slots-group" id="c-btc-grp">
+        <div class="slot-group-label"><span class="badge-parent">Parent asset</span> BTC charts</div>
+        <div class="slots-grid">
+          <div class="slot parent-slot" id="cs-b15" onclick="trigSlot('crypto','b15')">
+            <input type="file" accept="image/*" style="display:none" onchange="slotPick('crypto','b15',this)">
+            <div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div>
+            <img class="slot-thumb" id="ct-b15"><div class="slot-label">BTC 15m</div>
+          </div>
+          <div class="slot parent-slot" id="cs-b1h" onclick="trigSlot('crypto','b1h')">
+            <input type="file" accept="image/*" style="display:none" onchange="slotPick('crypto','b1h',this)">
+            <div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div>
+            <img class="slot-thumb" id="ct-b1h"><div class="slot-label">BTC 1H</div>
+          </div>
+          <div class="slot parent-slot" id="cs-b4h" onclick="trigSlot('crypto','b4h')">
+            <input type="file" accept="image/*" style="display:none" onchange="slotPick('crypto','b4h',this)">
+            <div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div>
+            <img class="slot-thumb" id="ct-b4h"><div class="slot-label">BTC 4H</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="resetAll('crypto')">🔄 Clear all charts</button>
+    <button class="analyze-btn" id="btn-crypto" onclick="analyze('crypto')">🔍 Analyze Signal</button>
+    <div id="res-crypto"></div>
+  </div>
+
+  <!-- GOLD/SILVER -->
+  <div class="section" id="sec-gold">
+    <div class="form-block">
+      <label class="form-label">Metal</label>
+      <div class="chip-row" id="g-metal">
+        <span class="chip active" onclick="setChip('g-metal',this);updateGold()">XAUUSD — Gold</span>
+        <span class="chip" onclick="setChip('g-metal',this);updateGold()">XAGUSD — Silver</span>
+      </div>
+    </div>
+    <div class="form-block">
+      <label class="form-label">Direction</label>
+      <div class="chip-row" id="g-dir">
+        <span class="chip active" onclick="setChip('g-dir',this)">BUY</span>
+        <span class="chip" onclick="setChip('g-dir',this)">SELL</span>
+      </div>
+    </div>
+    <div class="signal-box">
+      <div class="signal-hint">📋 Paste Telegram signal (optional)</div>
+      <textarea id="g-signal" placeholder="BUY — XAGUSD&#10;Price : $70.62&#10;RSI   : 73.4&#10;..."></textarea>
+    </div>
+    <div class="asset-info-box" id="g-asset-info">
+      <div>
+        <div class="asset-info-label">Symbol</div>
+        <div class="asset-info-name" id="g-info-symbol">XAUUSD</div>
+      </div>
+      <div style="text-align:right">
+        <div class="asset-info-label">Broker / Exchange</div>
+        <div class="asset-info-broker" id="g-info-broker">OANDA</div>
+      </div>
+    </div>
+    <div class="upload-section">
+      <div class="upload-section-title">📸 Upload Charts</div>
+      <div class="upload-section-sub">Gold (15m, 1H, 4H) + DXY 4H</div>
+      <div class="quick-hint">💡 <strong>PC:</strong> Hold <strong>Ctrl</strong> → select all at once! &nbsp;📱 Tap each slot on mobile</div>
+      <label class="big-upload-btn" style="cursor:pointer">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="bulkUpload('gold',this)">
+        📂 Select All Charts At Once
+      </label>
+      <div class="progress-bar"><div class="progress-fill" id="g-prog" style="width:0%"></div></div>
+      <div class="slots-group">
+        <div class="slot-group-label"><span class="badge-trade">Trade asset</span> <span id="g-metal-lbl">Gold charts</span></div>
+        <div class="slots-grid">
+          <div class="slot" id="gs-g15" onclick="trigSlot('gold','g15')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','g15',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-g15"><div class="slot-label">15m</div></div>
+          <div class="slot" id="gs-g1h" onclick="trigSlot('gold','g1h')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','g1h',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-g1h"><div class="slot-label">1H</div></div>
+          <div class="slot" id="gs-g4h" onclick="trigSlot('gold','g4h')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','g4h',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-g4h"><div class="slot-label">4H</div></div>
+        </div>
+      </div>
+      <div class="slots-group">
+        <div class="slot-group-label"><span class="badge-inv">Inverse</span> DXY</div>
+        <div class="slots-grid"><div class="slot parent-slot" id="gs-gdxy" onclick="trigSlot('gold','gdxy')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','gdxy',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-gdxy"><div class="slot-label">DXY 4H</div></div></div>
+      </div>
+      <div class="slots-group" id="g-ref-grp" style="display:none">
+        <div class="slot-group-label"><span class="badge-parent">Parent</span> Gold reference (Silver only)</div>
+        <div class="slots-grid">
+          <div class="slot parent-slot" id="gs-gr15" onclick="trigSlot('gold','gr15')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','gr15',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-gr15"><div class="slot-label">Gold 15m</div></div>
+          <div class="slot parent-slot" id="gs-gr1h" onclick="trigSlot('gold','gr1h')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','gr1h',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-gr1h"><div class="slot-label">Gold 1H</div></div>
+          <div class="slot parent-slot" id="gs-gr4h" onclick="trigSlot('gold','gr4h')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('gold','gr4h',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="gt-gr4h"><div class="slot-label">Gold 4H</div></div>
+        </div>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="resetAll('gold')">🔄 Clear all charts</button>
+    <button class="analyze-btn" id="btn-gold" onclick="analyze('gold')">🔍 Analyze Signal</button>
+    <div id="res-gold"></div>
+  </div>
+
+  <!-- FOREX -->
+  <div class="section" id="sec-forex">
+    <div class="form-block">
+      <label class="form-label">Pair</label>
+      <div class="chip-row" id="f-pair">
+        <span class="chip active" onclick="setChip('f-pair',this);updateForex()">EURUSD</span>
+        <span class="chip" onclick="setChip('f-pair',this);updateForex()">GBPUSD</span>
+        <span class="chip" onclick="setChip('f-pair',this);updateForex()">USDJPY</span>
+        <span class="chip" onclick="setChip('f-pair',this);updateForex()">AUDUSD</span>
+        <span class="chip" onclick="setChip('f-pair',this);updateForex()">DXY</span>
+        <span class="chip" onclick="setChip('f-pair',this);updateForex()">Other</span>
+      </div>
+    </div>
+    <div class="form-block">
+      <label class="form-label">Direction</label>
+      <div class="chip-row" id="f-dir">
+        <span class="chip active" onclick="setChip('f-dir',this)">BUY</span>
+        <span class="chip" onclick="setChip('f-dir',this)">SELL</span>
+      </div>
+    </div>
+    <div class="signal-box">
+      <div class="signal-hint">📋 Paste Telegram signal (optional)</div>
+      <textarea id="f-signal" placeholder="Paste signal here..."></textarea>
+    </div>
+    <div class="asset-info-box" id="f-asset-info">
+      <div>
+        <div class="asset-info-label">Symbol</div>
+        <div class="asset-info-name" id="f-info-symbol">EURUSD</div>
+      </div>
+      <div style="text-align:right">
+        <div class="asset-info-label">Broker / Exchange</div>
+        <div class="asset-info-broker" id="f-info-broker">FOREX.COM</div>
+      </div>
+    </div>
+    <div class="upload-section">
+      <div class="upload-section-title">📸 Upload Charts</div>
+      <div class="upload-section-sub" id="f-sub">EURUSD (15m, 1H, 4H) + DXY 4H</div>
+      <div class="quick-hint">💡 <strong>PC:</strong> Hold <strong>Ctrl</strong> → select all at once! &nbsp;📱 Tap each slot on mobile</div>
+      <label class="big-upload-btn" style="cursor:pointer">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="bulkUpload('forex',this)">
+        📂 Select All Charts At Once
+      </label>
+      <div class="progress-bar"><div class="progress-fill" id="f-prog" style="width:0%"></div></div>
+      <div class="slots-group">
+        <div class="slot-group-label"><span class="badge-trade">Trade asset</span> <span id="f-pair-lbl">EURUSD charts</span></div>
+        <div class="slots-grid">
+          <div class="slot" id="fs-f15" onclick="trigSlot('forex','f15')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('forex','f15',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="ft-f15"><div class="slot-label">15m</div></div>
+          <div class="slot" id="fs-f1h" onclick="trigSlot('forex','f1h')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('forex','f1h',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="ft-f1h"><div class="slot-label">1H</div></div>
+          <div class="slot" id="fs-f4h" onclick="trigSlot('forex','f4h')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('forex','f4h',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="ft-f4h"><div class="slot-label">4H</div></div>
+        </div>
+      </div>
+      <div class="slots-group" id="forex-dxy-grp">
+        <div class="slot-group-label"><span class="badge-parent">Context</span> DXY</div>
+        <div class="slots-grid"><div class="slot parent-slot" id="fs-fdxy" onclick="trigSlot('forex','fdxy')"><input type="file" accept="image/*" style="display:none" onchange="slotPick('forex','fdxy',this)"><div class="slot-icon icon-empty">🖼️</div><div class="slot-icon icon-done">✅</div><img class="slot-thumb" id="ft-fdxy"><div class="slot-label">DXY 4H</div></div></div>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="resetAll('forex')">🔄 Clear all charts</button>
+    <button class="analyze-btn" id="btn-forex" onclick="analyze('forex')">🔍 Analyze Signal</button>
+    <div id="res-forex"></div>
+  </div>
+</main>
+
+<footer>Trade Analyzer — Claude AI Vision • Not financial advice • Always manage your risk 🙏</footer>
+
+<script>
+const imgs = {};
+const SLOT_PREFIX = { crypto:'cs', gold:'gs', forex:'fs' };
+const THUMB_PREFIX = { crypto:'ct', gold:'gt', forex:'ft' };
+const BULK_ORDER = {
+  crypto: ['a15','a1h','a4h','b15','b1h','b4h'],
+  gold:   ['g15','g1h','g4h','gdxy','gr15','gr1h','gr4h'],
+  forex:  ['f15','f1h','f4h','fdxy']
+};
+const TOTAL = { crypto:6, gold:4, forex:4 };
+const REQ = {
+  crypto:['a15','a1h','a4h'],
+  gold:['g15','g1h','g4h'],
+  forex:['f15','f1h','f4h']
+};
+
+function checkKey(){
+  const k=document.getElementById('apiKey').value.trim();
+  const ok=k.startsWith('sk-ant-')&&k.length>20;
+  document.getElementById('keyBadge').classList.toggle('show',ok);
+  const b=document.getElementById('setupBanner');
+  if(b) b.style.display=ok?'none':'';
+}
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('visible'));
+  el.classList.add('active');
+  document.getElementById('sec-'+tab).classList.add('visible');
+}
+function setChip(gid,el){
+  document.querySelectorAll('#'+gid+' .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+function chip(gid){
+  const el=document.querySelector('#'+gid+' .chip.active');
+  return el?el.textContent.trim():'';
+}
+function trigSlot(mode,key){
+  const sp=SLOT_PREFIX[mode];
+  const slot=document.getElementById(sp+'-'+key);
+  if(slot) slot.querySelector('input').click();
+}
+function readFile(file){
+  return new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(file);});
+}
+function fillSlot(mode,key,b64){
+  imgs[mode+'_'+key]=b64;
+  const sp=SLOT_PREFIX[mode],tp=THUMB_PREFIX[mode];
+  const slot=document.getElementById(sp+'-'+key);
+  const thumb=document.getElementById(tp+'-'+key);
+  if(slot) slot.classList.add('filled');
+  if(thumb) thumb.src=b64;
+  updateProg(mode);
+}
+function updateProg(mode){
+  const order=BULK_ORDER[mode];
+  const filled=order.filter(k=>imgs[mode+'_'+k]).length;
+  const total=TOTAL[mode];
+  const pct=Math.round(filled/total*100);
+  const bar=document.getElementById((mode==='crypto'?'c':mode==='gold'?'g':'f')+'-prog');
+  if(bar) bar.style.width=Math.min(pct,100)+'%';
+}
+async function bulkUpload(mode,input){
+  const files=Array.from(input.files);
+  const order=BULK_ORDER[mode];
+  for(let i=0;i<files.length&&i<order.length;i++){
+    const b64=await readFile(files[i]);
+    fillSlot(mode,order[i],b64);
+  }
+}
+async function slotPick(mode,key,input){
+  if(!input.files[0]) return;
+  const b64=await readFile(input.files[0]);
+  fillSlot(mode,key,b64);
+}
+function resetAll(mode){
+  BULK_ORDER[mode].forEach(k=>{
+    delete imgs[mode+'_'+k];
+    const sp=SLOT_PREFIX[mode],tp=THUMB_PREFIX[mode];
+    const slot=document.getElementById(sp+'-'+k);
+    const thumb=document.getElementById(tp+'-'+k);
+    if(slot) slot.classList.remove('filled');
+    if(thumb) thumb.src='';
+  });
+  updateProg(mode);
+  document.getElementById('res-'+mode).innerHTML='';
+  // Clear the Telegram signal textarea
+  const sigMap={crypto:'c-signal',gold:'g-signal',forex:'f-signal'};
+  const sigEl=document.getElementById(sigMap[mode]);
+  if(sigEl) sigEl.value='';
+}
+const CRYPTO_BROKER={BNB:'CRYPTO',ETH:'COINBASE',SOL:'BINANCE',BTC:'COINBASE',Other:'CRYPTO'};
+const CRYPTO_SYMBOL={BNB:'BNBUSD',ETH:'ETHUSD',SOL:'SOLUSDT',BTC:'BTCUSD',Other:'—'};
+function updateCrypto(){
+  const a=chip('c-asset');
+  const lbl=document.getElementById('c-alt-lbl');
+  if(lbl) lbl.textContent=a+' charts';
+  ['a15','a1h','a4h'].forEach((k,i)=>{
+    const el=document.getElementById('cl-'+k);
+    if(el) el.textContent=a+' '+['15m','1H','4H'][i];
+  });
+  const grp=document.getElementById('c-btc-grp');
+  if(grp) grp.style.display=a==='BTC'?'none':'';
+  TOTAL.crypto=a==='BTC'?3:6;
+  updateProg('crypto');
+  // Update info box
+  const sym=document.getElementById('c-info-symbol');
+  const brk=document.getElementById('c-info-broker');
+  if(sym) sym.textContent=CRYPTO_SYMBOL[a]||a+'USD';
+  if(brk) brk.textContent=CRYPTO_BROKER[a]||'CRYPTO';
+}
+function updateGold(){
+  const m=chip('g-metal');
+  const isSilver=m.includes('Silver');
+  const lbl=document.getElementById('g-metal-lbl');
+  if(lbl) lbl.textContent=isSilver?'Silver charts':'Gold charts';
+  const ref=document.getElementById('g-ref-grp');
+  if(ref) ref.style.display=isSilver?'':'none';
+  TOTAL.gold=isSilver?7:4;
+  updateProg('gold');
+  // Update info box
+  const sym=document.getElementById('g-info-symbol');
+  const brk=document.getElementById('g-info-broker');
+  if(sym) sym.textContent=isSilver?'XAGUSD':'XAUUSD';
+  if(brk) brk.textContent='OANDA';
+}
+const FOREX_BROKER={EURUSD:'FOREX.COM',GBPUSD:'FOREX.COM',USDJPY:'FOREX.COM',AUDUSD:'FOREX.COM',DXY:'TVC',Other:'FOREX.COM'};
+function updateForex(){
+  const p=chip('f-pair');
+  const isDXY=p==='DXY';
+  const lbl=document.getElementById('f-pair-lbl');
+  if(lbl) lbl.textContent=(isDXY?'DXY':p)+' charts';
+  // Update subtitle
+  const sub=document.getElementById('f-sub');
+  if(sub) sub.textContent=isDXY?'DXY (15m, 1H, 4H) — standalone index analysis':(p+' (15m, 1H, 4H) + DXY 4H');
+  // Hide DXY context slot when DXY IS the asset — no need for DXY-as-context of itself
+  const dxyGrp=document.getElementById('forex-dxy-grp');
+  if(dxyGrp) dxyGrp.style.display=isDXY?'none':'';
+  // Update TOTAL required slots
+  TOTAL.forex=isDXY?3:4;
+  updateProg('forex');
+  // Update info box
+  const sym=document.getElementById('f-info-symbol');
+  const brk=document.getElementById('f-info-broker');
+  if(sym) sym.textContent=p==='Other'?'—':p;
+  if(brk) brk.textContent=FOREX_BROKER[p]||'FOREX.COM';
+}
+
+async function analyze(mode){
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key||!key.startsWith('sk-ant-')){alert('Paste your Claude API key top-right first!');return;}
+  const btn=document.getElementById('btn-'+mode);
+  const resDiv=document.getElementById('res-'+mode);
+  const missing=REQ[mode].some(k=>!imgs[mode+'_'+k]);
+  if(missing){resDiv.innerHTML='<div class="alert alert-warn">⚠️ Upload at least 15m, 1H and 4H charts first!</div>';return;}
+
+  let asset,direction,signalText,allKeys,systemP,userP;
+
+  // ── Extract RSI / STC / ADX numbers from Telegram signal text ───────
+  function parseSignalIndicators(txt){
+    if(!txt) return {rsi:null,stc:null,adx:null};
+    const get=(key)=>{
+      const m=txt.match(new RegExp('"'+key+'"\\s*:\\s*"?([\\d.]+)"?','i'));
+      return m?parseFloat(m[1]):null;
+    };
+    return {rsi:get('rsi'), stc:get('stc'), adx:get('adx')};
+  }
+
+  // ── Build indicator warning lines injected into every prompt ─────────
+  function buildIndicatorContext(txt){
+    const {rsi,stc,adx}=parseSignalIndicators(txt);
+    if(rsi===null && stc===null) return '';
+    let lines='\nSIGNAL INDICATORS (extracted from Telegram signal):';
+    if(rsi!==null) lines+=`\n- RSI(14)=${rsi}${rsi>70?' WARNING: OVERBOUGHT on 15m — counter-trend BUY is exhausted':rsi<30?' WARNING: OVERSOLD on 15m — counter-trend SELL is exhausted':''}`;
+    if(stc!==null) lines+=`\n- STC=${stc}${stc>90?' WARNING: STC OVEREXTENDED bullish — high reversal risk, do not chase':stc<10?' WARNING: STC OVEREXTENDED bearish — high reversal risk, do not chase':''}`;
+    if(adx!==null) lines+=`\n- ADX=${adx}${adx<20?' (ADX<20: weak trend — extra caution)':adx>40?' (ADX>40: strong trend momentum)':''}`;
+    lines+='\nRULE: If RSI>70 OR STC>90 on 15m AND it conflicts with 4H trend → SKIP with HIGH confidence. If RSI>70 OR STC>90 AND aligned with 4H trend → set confidence=MEDIUM (not HIGH), trade is overextended.';
+    return lines;
+  }
+
+  // ── Strengthened SKIP rules — injected into ALL prompts ─────────────
+  const SKIP_RULES=`
+SKIP RULES (these override BUY/SELL — check these first):
+- 4H BEAR + 1H BEAR + 15m BUY signal + (RSI>65 OR STC>85) = SKIP — counter-trend exhaustion, high reversal risk
+- 4H BULL + 1H BULL + 15m SELL signal + (RSI<35 OR STC<15) = SKIP — counter-trend exhaustion, high reversal risk  
+- 4H and 1H pointing opposite directions with no clear dominant structure = WAIT
+- Any setup where DXY direction directly contradicts the metal signal = SKIP`;
+
+  if(mode==='crypto'){
+    asset=chip('c-asset');direction=chip('c-dir');
+    signalText=document.getElementById('c-signal').value.trim();
+    const isBTC=asset==='BTC';
+    allKeys=(isBTC?['a15','a1h','a4h']:['a15','a1h','a4h','b15','b1h','b4h']).map(k=>'crypto_'+k);
+    systemP='Expert crypto trader. Top-down multi-timeframe analysis. Respond ONLY with valid JSON.';
+    const _indCtxC=buildIndicatorContext(signalText);
+    userP=`Asset:${asset} Direction:${direction}\n${signalText?'Signal:\n'+signalText+'\n':''}${_indCtxC}\n${!isBTC?`${asset} charts(15m,1H,4H)+BTC charts(15m,1H,4H). BTC=PARENT, alts follow BTC. BTC bearish can override.`:'BTC charts(15m,1H,4H)'}\nVERDICT RULES (strict):\n- 4H BULL+1H BULL+15m VALID${!isBTC?'+BTC BULL':''}=BUY\n- 4H BEAR+1H BEAR+15m VALID${!isBTC?'+BTC BEAR':''}=SELL\n- Mixed or unclear higher timeframes=WAIT\n${SKIP_RULES}\nReturn ONLY:{"alt_4h":"BULL or BEAR","alt_1h":"BULL or BEAR","alt_15m":"VALID or INVALID","btc_4h":"${isBTC?'N/A':'BULL or BEAR'}","btc_1h":"${isBTC?'N/A':'BULL or BEAR'}","btc_15m":"${isBTC?'N/A':'BULL or BEAR'}","signal":"BUY or SELL","verdict":"BUY or SELL or WAIT or SKIP","confidence":"HIGH or MEDIUM or LOW","reason":"2 sentences max. Mention RSI/STC if they influenced verdict."}`;
+  } else if(mode==='gold'){
+    asset=chip('g-metal');direction=chip('g-dir');
+    signalText=document.getElementById('g-signal').value.trim();
+    const isSilver=asset.includes('Silver');
+    const base=['g15','g1h','g4h','gdxy'];
+    allKeys=(isSilver?[...base,'gr15','gr1h','gr4h']:base).map(k=>'gold_'+k);
+    systemP='Expert precious metals trader. Top-down analysis. Respond ONLY with valid JSON.';
+    const _indCtxG=buildIndicatorContext(signalText);
+    userP=`Asset:${asset} Direction:${direction}\n${signalText?'Signal:\n'+signalText+'\n':''}${_indCtxG}\nDXY INVERSE to metals. DXY falling=metals bullish. DXY rising=metals bearish.${isSilver?' Silver follows Gold.':''}\nVERDICT RULES (strict):\n- 4H BULL+1H BULL+15m VALID+DXY falling=BUY\n- 4H BEAR+1H BEAR+15m VALID+DXY rising=SELL\n- Mixed conditions=WAIT\n${SKIP_RULES}\nReturn ONLY:{"alt_4h":"BULL or BEAR","alt_1h":"BULL or BEAR","alt_15m":"VALID or INVALID","dxy_direction":"UP or DOWN","gold_bias":"${isSilver?'BULL or BEAR':'N/A'}","btc_4h":"N/A","btc_1h":"N/A","btc_15m":"N/A","signal":"BUY or SELL","verdict":"BUY or SELL or WAIT or SKIP","confidence":"HIGH or MEDIUM or LOW","reason":"2 sentences max. Mention RSI/STC/DXY if they influenced verdict."}`;
+  } else {
+    asset=chip('f-pair');direction=chip('f-dir');
+    signalText=document.getElementById('f-signal').value.trim();
+    const isDXY=asset==='DXY';
+    if(isDXY){
+      allKeys=['f15','f1h','f4h'].map(k=>'forex_'+k);
+      systemP='Expert macro analyst. Analyze DXY (US Dollar Index) across timeframes. Respond ONLY with valid JSON.';
+      const _indCtxD=buildIndicatorContext(signalText);
+      userP=`Asset:DXY Direction:${direction}\n${signalText?'Signal:\n'+signalText+'\n':''}${_indCtxD}\nDXY is the US Dollar index. Rising DXY=USD strong=bearish for metals+crypto+EM currencies. Falling DXY=USD weak=bullish for metals+crypto.\nVERDICT RULES (strict):\n- 4H UP+1H UP+15m VALID=BUY (DXY strengthening)\n- 4H DOWN+1H DOWN+15m VALID=SELL (DXY weakening)\n- Mixed conditions=WAIT\n${SKIP_RULES}\nReturn ONLY:{"alt_4h":"UP or DOWN","alt_1h":"UP or DOWN","alt_15m":"VALID or INVALID","dxy_direction":"UP or DOWN","btc_4h":"N/A","btc_1h":"N/A","btc_15m":"N/A","gold_bias":"N/A","signal":"BUY or SELL","verdict":"BUY or SELL or WAIT or SKIP","confidence":"HIGH or MEDIUM or LOW","reason":"2 sentences. Note RSI/STC if relevant and impact on metals and crypto."}`;
+    } else {
+      allKeys=['f15','f1h','f4h','fdxy'].map(k=>'forex_'+k);
+      systemP='Expert forex trader. Top-down analysis. Respond ONLY with valid JSON.';
+      const _indCtxF=buildIndicatorContext(signalText);
+      userP=`Pair:${asset} Direction:${direction}\n${signalText?'Signal:\n'+signalText+'\n':''}${_indCtxF}\nVERDICT RULES (strict):\n- 4H BULL+1H BULL+15m VALID=BUY\n- 4H BEAR+1H BEAR+15m VALID=SELL\n- Mixed conditions=WAIT\n${SKIP_RULES}\nCheck DXY for USD pairs.\nReturn ONLY:{"alt_4h":"BULL or BEAR","alt_1h":"BULL or BEAR","alt_15m":"VALID or INVALID","dxy_direction":"UP or DOWN","btc_4h":"N/A","btc_1h":"N/A","btc_15m":"N/A","gold_bias":"N/A","signal":"BUY or SELL","verdict":"BUY or SELL or WAIT or SKIP","confidence":"HIGH or MEDIUM or LOW","reason":"2 sentences max. Mention RSI/STC if they influenced verdict."}`;
+    }
+  }
+
+  btn.disabled=true;
+  btn.innerHTML='<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span> Analyzing...';
+  resDiv.innerHTML='';
+
+  const imgBlocks=allKeys.filter(k=>imgs[k]).map(k=>{
+    const b64=imgs[k];
+    const mime=(b64.match(/^data:([^;]+);/)||['','image/png'])[1];
+    const data=b64.replace(/^data:[^;]+;base64,/,'');
+    return{type:'image',source:{type:'base64',media_type:mime,data}};
+  });
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:systemP,messages:[{role:'user',content:[{type:'text',text:userP},...imgBlocks]}]})
+    });
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const text=data.content.map(c=>c.text||'').join('');
+    const r=JSON.parse(text.replace(/```json|```/g,'').trim());
+    renderResult(resDiv,r,mode,asset);
+    exportSignalJSON(r,mode,asset);
+  }catch(err){
+    resDiv.innerHTML=`<div class="alert alert-err">❌ ${err.message}</div>`;
+  }
+  btn.disabled=false;
+  btn.innerHTML='🔍 Analyze Signal';
+}
+
+function vc(v){
+  if(!v||v==='N/A') return 'neutral';
+  v=v.toUpperCase();
+  return ['BULL','VALID','DOWN'].includes(v)?'bull':['BEAR','INVALID','UP'].includes(v)?'bear':'neutral';
+}
+function em(v){
+  if(!v||v==='N/A') return '➖';
+  v=v.toUpperCase();
+  if(v==='BULL'||v==='VALID'||v==='DOWN') return '🟢';
+  if(v==='BEAR'||v==='INVALID'||v==='UP') return '🔴';
+  return '➖';
+}
+
+// ── Asset → MT5 symbol & JSON filename ──────────────────────────────
+const ASSET_SYMBOL = {
+  // Crypto
+  BNB:'BNBUSD', ETH:'ETHUSD', SOL:'SOLUSDT', BTC:'BTCUSD',
+  // Gold/Silver (chip text contains full label)
+  'XAUUSD — Gold':'XAUUSD', 'XAGUSD — Silver':'XAGUSD',
+  // Forex / indices
+  EURUSD:'EURUSD', GBPUSD:'GBPUSD', USDJPY:'USDJPY', AUDUSD:'AUDUSD', DXY:'DXY'
+};
+const ASSET_FILENAME = {
+  BNBUSD:'bnb_signal.json',   ETHUSD:'eth_signal.json',
+  SOLUSDT:'sol_signal.json',  BTCUSD:'btc_signal.json',
+  XAUUSD:'gold_signal.json',  XAGUSD:'silver_signal.json',
+  EURUSD:'eurusd_signal.json',GBPUSD:'gbpusd_signal.json',
+  USDJPY:'usdjpy_signal.json',AUDUSD:'audusd_signal.json',
+  DXY:'dxy_signal.json'
+};
+
+// ── Per-symbol active trade tracker (in-memory) ──────────────────────
+// The EA writes trade_active:true to JSON when a trade opens,
+// and trade_active:false when it closes. We also track it here
+// so the UI can block a second signal for the same symbol.
+const _activeTradeSymbols = new Set();
+
+function markTradeActive(symbol, active) {
+  if (active) _activeTradeSymbols.add(symbol);
+  else _activeTradeSymbols.delete(symbol);
+}
+
+function isTradeActive(symbol) {
+  return _activeTradeSymbols.has(symbol);
+}
+
+function exportSignalJSON(r, mode, asset) {
+  // Resolve MT5 symbol
+  const symbol = ASSET_SYMBOL[asset] || (asset.includes('Other') ? null : asset+'USD');
+  if (!symbol) return; // "Other" asset — no known filename
+
+  const filename = ASSET_FILENAME[symbol] || (symbol.toLowerCase().replace('/','')+'_signal.json');
+
+  // ── DUPLICATE TRADE GUARD ────────────────────────────────────────────
+  // If a trade is already active for this symbol, skip sending a new signal.
+  const verdict = (r.verdict || 'WAIT').toUpperCase();
+  const isActionable = (verdict === 'BUY' || verdict === 'SELL' || verdict === 'SKIP');
+  if (isActionable && isTradeActive(symbol)) {
+    // Show warning in the result div instead of exporting
+    const resDiv = document.getElementById('res-' + mode);
+    if (resDiv) {
+      const warn = document.createElement('div');
+      warn.className = 'alert alert-warn';
+      warn.style.cssText = 'margin-top:10px;background:rgba(255,165,0,.1);color:#f59e0b;border-color:rgba(255,165,0,.35)';
+      warn.innerHTML = `⚠️ <strong>Trade already active for ${symbol}</strong> — signal blocked.<br>
+        <span style="font-size:11px;opacity:.75">EA is running a position. Wait for it to close before sending a new signal.</span>`;
+      resDiv.appendChild(warn);
+    }
+    return; // Do NOT write JSON — no second trade
+  }
+
+  // Mark this symbol as active immediately so follow-up signals are blocked
+  if (isActionable) markTradeActive(symbol, true);
+
+  // Build the payload — always use fresh timestamp so EA detects it as new
+  const now       = new Date();
+  const unixSec   = Math.floor(now.getTime() / 1000);
+  const tradeAllowed = isActionable;
+  const payload = {
+    version:        'v3',
+    symbol:         symbol,
+    signal:         (r.signal  || verdict).toUpperCase(),
+    verdict:        verdict,
+    confidence:     (r.confidence || 'MEDIUM').toUpperCase(),
+    trade_allowed:  tradeAllowed,
+    reason:         r.reason || '',
+    timestamp:      now.toISOString(),
+    created_at_unix: unixSec,
+    analysis_id:    unixSec
+  };
+
+  // Trigger browser download
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();}, 1000);
+
+  // Show inline confirmation below the result
+  const resDiv = document.getElementById('res-' + mode);
+  const note   = document.createElement('div');
+  note.className = 'alert alert-warn';
+  note.style.cssText = 'margin-top:10px;background:rgba(79,127,255,.1);color:var(--accent);border-color:rgba(79,127,255,.25)';
+  note.innerHTML = `📥 <strong>${filename}</strong> downloaded — move it to your MT5 Common Files folder.<br>
+    <span style="font-size:11px;opacity:.75">Path: MetaQuotes\\Terminal\\Common\\Files\\${filename}</span><br>
+    <span style="font-size:11px;color:#f59e0b">🔒 ${symbol} marked as <strong>ACTIVE</strong> — no new signal will be sent until trade closes.
+    <button onclick="markTradeActive('${symbol}',false);this.parentElement.textContent='✅ ${symbol} cleared — ready for new signal.'" 
+      style="margin-left:8px;padding:2px 8px;font-size:10px;background:rgba(245,158,11,.2);color:#f59e0b;border:1px solid #f59e0b;border-radius:4px;cursor:pointer">
+      Clear manually
+    </button></span>`;
+  resDiv.appendChild(note);
+}
+
+function renderResult(div,r,mode,asset){
+  const verdict=r.verdict||'WAIT';
+  const vc2=verdict==='BUY'?'buy':verdict==='SELL'?'sell':verdict==='SKIP'?'skip':'wait';
+  const vi=verdict==='BUY'?'✅':verdict==='SELL'?'🔻':verdict==='SKIP'?'⛔':'⚠️';
+  const conf=(r.confidence||'MEDIUM').toUpperCase();
+  const isCrypto=mode==='crypto';
+  const isGold=mode==='gold';
+  const isDXY=asset==='DXY';
+  const isSilver=asset&&asset.includes('Silver');
+  const showBTC=isCrypto&&asset!=='BTC'&&r.btc_4h!=='N/A';
+  const showDXY=(isGold||mode==='forex')&&!isDXY; // hide DXY-as-context when DXY is primary
+  const tfLabel4h=isDXY?'4H direction':'4H trend';
+  const tfLabel1h=isDXY?'1H direction':'1H trend';
+  div.innerHTML=`
+  <div class="result-card">
+    <div class="result-header ${vc2}">
+      <div class="verdict-icon">${vi}</div>
+      <div><div class="verdict ${vc2}">${verdict}</div><span class="conf-pill conf-${conf}">${conf} confidence</span></div>
+    </div>
+    <div class="result-body">
+      <div class="trends-label">${asset}${isDXY?' — US Dollar Index':''} — top-down</div>
+      <div class="trend-grid">
+        <div class="trend-cell"><div class="cell-tf">${tfLabel4h}</div><div class="cell-val ${vc(r.alt_4h)}">${em(r.alt_4h)} ${r.alt_4h}</div></div>
+        <div class="trend-cell"><div class="cell-tf">${tfLabel1h}</div><div class="cell-val ${vc(r.alt_1h)}">${em(r.alt_1h)} ${r.alt_1h}</div></div>
+        <div class="trend-cell"><div class="cell-tf">15m signal</div><div class="cell-val ${vc(r.alt_15m)}">${em(r.alt_15m)} ${r.alt_15m}</div></div>
+      </div>
+      ${showBTC?`<div class="trends-label" style="margin-top:10px">BTC — parent asset</div><div class="trend-grid"><div class="trend-cell"><div class="cell-tf">BTC 4H</div><div class="cell-val ${vc(r.btc_4h)}">${em(r.btc_4h)} ${r.btc_4h}</div></div><div class="trend-cell"><div class="cell-tf">BTC 1H</div><div class="cell-val ${vc(r.btc_1h)}">${em(r.btc_1h)} ${r.btc_1h}</div></div><div class="trend-cell"><div class="cell-tf">BTC 15m</div><div class="cell-val ${vc(r.btc_15m)}">${em(r.btc_15m)} ${r.btc_15m}</div></div></div>`:''}
+      ${showDXY?`<div class="trends-label" style="margin-top:10px">DXY — ${isGold?'inverse to metal':'forex context'}</div><div class="trend-grid cols2"><div class="trend-cell"><div class="cell-tf">DXY</div><div class="cell-val ${vc(r.dxy_direction)}">${em(r.dxy_direction)} ${r.dxy_direction}</div></div>${isSilver&&r.gold_bias!=='N/A'?`<div class="trend-cell"><div class="cell-tf">Gold bias</div><div class="cell-val ${vc(r.gold_bias)}">${em(r.gold_bias)} ${r.gold_bias}</div></div>`:''}</div>`:''}
+      ${isDXY?`<div class="trends-label" style="margin-top:10px;color:var(--text2);font-size:11px">⚠️ DXY BUY = USD strengthening (bearish for metals &amp; crypto) &nbsp;|&nbsp; DXY SELL = USD weakening (bullish for metals &amp; crypto)</div>`:''}
+      <div class="reason-box" style="margin-top:12px"><div class="reason-text">💬 ${r.reason}</div></div>
+    </div>
+  </div>`;
+}
+</script>
+</body>
+</html>
